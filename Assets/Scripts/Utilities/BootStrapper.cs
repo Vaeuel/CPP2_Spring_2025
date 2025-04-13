@@ -15,6 +15,19 @@ public class BootStrapper : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(this);
     }
+
+    private void Start()
+    {
+        for (int i = 0; i < SceneManager.sceneCount; i++)
+        {
+            Scene scene = SceneManager.GetSceneAt(i);
+
+            if (scene.name == "Game")
+                return;
+        }
+
+        SceneManager.LoadScene("Game", LoadSceneMode.Additive);
+    }
 }
 
 public static class PerformBootstrap
