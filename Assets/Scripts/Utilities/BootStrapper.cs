@@ -1,52 +1,36 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class BootStrapper : MonoBehaviour
+public class BootStrapper : Singleton<BootStrapper>
 {
-    public static BootStrapper Instance { get; private set; }
-    private void Awake()
-    {
-        if (Instance != null)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
-        DontDestroyOnLoad(this);
-    }
-
-    private void Start()
-    {
-        for (int i = 0; i < SceneManager.sceneCount; i++)
-        {
-            Scene scene = SceneManager.GetSceneAt(i);
-
-            if (scene.name == "Game")
-                return;
-        }
-
-        SceneManager.LoadScene("Game", LoadSceneMode.Additive);
-    }
-}
-
-public static class PerformBootstrap
-{
-    const string BootStrapSceneName = "Bootstrap";
-
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
 
     public static void BootStrapGame()
+    {
+        CheckScene("Bootstrap");
+    }
+    private void Start()
+    {
+        //CheckScene("Game");
+    }
+
+    protected override void Awake()
+    {
+        base.Awake();
+    }
+
+    public static void CheckScene(string sceneName)
     {
         // traverse the currently loaded scene if it's loaded otherwise exit
         for (int i = 0; i < SceneManager.sceneCount; i++)
         {
             Scene scene = SceneManager.GetSceneAt(i);
 
-            if (scene.name == BootStrapSceneName)
+            if (scene.name == sceneName)
                 return;
         }
 
-        SceneManager.LoadScene(BootStrapSceneName, LoadSceneMode.Additive);
+        SceneManager.LoadScene(sceneName, LoadSceneMode.Additive);
     }
 }
+

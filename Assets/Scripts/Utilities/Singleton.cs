@@ -1,22 +1,41 @@
+using System;
 using UnityEngine;
 
-[DefaultExecutionOrder(-1)]
-public abstract class Singleton<T> : MonoBehaviour where T : Component
+[DefaultExecutionOrder(-1)] //Specifies earlier loads
+public abstract class Singleton<T> : MonoBehaviour where T : Component //Abstract prevents the script from being instantiated **'T' is a generic Type **Components are more flexible.
 {
     protected static T instance;
     public static T Instance
     {
         get
         {
-            if (instance == null)
-                instance = FindAnyObjectByType<T>();
-
-            if (instance == null)
+            try
             {
-                GameObject obj = new GameObject($"{typeof(T).Name}");
+                instance = FindAnyObjectByType<T>();
+                /*if (instance == null) throw new NullReferenceException();
+            }
+                **This code isn't needed but is used as examples of possible use cases**
+            catch (NullReferenceException e)
+            {
+                Debug.LogException(e);
+                GameObject obj = new GameObject($"{typeof(T).Name}");//points to the name of the child class and renames
+                instance = obj.AddComponent<T>();
+                DontDestroyOnLoad(obj);*/
+            }
+
+            catch (Exception e)//Exception class is a super class. NullReferenceExcaption is a sub class of this.
+            {
+                Debug.LogException(e);
+                GameObject obj = new GameObject($"{typeof(T).Name}");//points to the name of the child class and renames
                 instance = obj.AddComponent<T>();
                 DontDestroyOnLoad(obj);
             }
+
+            finally
+            {
+                //catch all code.
+            }
+
             return instance;
         }
     }
@@ -25,7 +44,7 @@ public abstract class Singleton<T> : MonoBehaviour where T : Component
     {
         if (!instance)
         {
-            instance = this as T;
+            instance = this as T; //Casting?
             DontDestroyOnLoad(instance);
             return;
         }
