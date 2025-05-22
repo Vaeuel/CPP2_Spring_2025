@@ -39,7 +39,7 @@ public class Spawner : MonoBehaviour
             GameObject clone = Instantiate(prefabToSpawn, spawnLocation.position, Quaternion.identity);
             clone.name = prefabToSpawn.name;
 
-            Debug.Log($"Spawned: {clone.name} at {spawnLocation.position}");
+            //Debug.Log($"Spawned: {clone.name} at {spawnLocation.position}");
         }
         catch (NullReferenceException ex)
         {

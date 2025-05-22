@@ -11,12 +11,14 @@ public class PlayerControl : MonoBehaviour, ProjectActions.IOverworldActions
 
     ProjectActions input;
     CharacterController cc;
+    Camera mainCam;
 
     #region Inspector Variables
     [Header("Movement Variables")]
     [SerializeField] private float initSpeed = .2f;
     [SerializeField] private float maxSpeed = 2.0f;
     [SerializeField] private float moveAccel = .2f;
+    [SerializeField] private float rotationSpeed = 10f;
     private float curSpeed = 5.0f;
 
     [Header("Jump Variables")]
@@ -41,6 +43,7 @@ public class PlayerControl : MonoBehaviour, ProjectActions.IOverworldActions
     private void Start()
     {
         cc = GetComponent<CharacterController>();
+        mainCam = Camera.main;
 
         timeToJumpApex = jumpTime / 2;
         gravity = (-2 * jumpHeight) / Mathf.Pow(timeToJumpApex, 2);
@@ -61,23 +64,48 @@ public class PlayerControl : MonoBehaviour, ProjectActions.IOverworldActions
     }
 
     void FixedUpdate()
+    {
+        Vector3 desiredMoveDirection = ProjectedMoveDirection();
+
+        //UpdateCharacterVelocity(desiredMoveDirection);
+
+        cc.Move(UpdateCharacterVelocity(desiredMoveDirection));
+
+        if (direction.magnitude > 0)
         {
-            UpdateCharacterVelocity();
-
-            cc.Move(velocity);
+            float timeStep = rotationSpeed * Time.fixedDeltaTime;
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(desiredMoveDirection), timeStep);
         }
+    }
 
-    private void UpdateCharacterVelocity()
+    private Vector3 UpdateCharacterVelocity(Vector3 desiredDirection)
     {
         if (direction == Vector2.zero) curSpeed = initSpeed;
 
-        velocity.x = direction.x * curSpeed;
-        velocity.z = direction.y * curSpeed;
+        velocity.x = desiredDirection.x * curSpeed;
+        velocity.z = desiredDirection.z * curSpeed;
 
         curSpeed += moveAccel * Time.deltaTime;
+        curSpeed = Mathf.Clamp(curSpeed, initSpeed, maxSpeed);
 
         if (!cc.isGrounded) velocity.y += gravity * Time.fixedDeltaTime;//checks ground and applies gravity if false
         else velocity.y = CheckJump();//else checks for jump command
+
+        return velocity;
+    }
+
+    private Vector3 ProjectedMoveDirection()
+    {
+        Vector3 cameraRight = mainCam.transform.right;
+        Vector3 cameraForward = mainCam.transform.forward;
+
+        cameraRight.y = 0;
+        cameraForward.y = 0;
+
+        cameraRight.Normalize();
+        cameraForward.Normalize();
+
+        return cameraForward * direction.y + cameraRight * direction.x;//Formula to project movement vector onto the cameras forward and right plane **should allow the player to move along the cameras POV**
     }
 
     private float CheckJump()
@@ -86,9 +114,9 @@ public class PlayerControl : MonoBehaviour, ProjectActions.IOverworldActions
         else return -cc.minMoveDistance; //Constantly applies -Y velocity to ensure ground check is working
     }
 
-    public void OnTriggerEnter(Collider other)
+    public void OnControllerColliderHit(ControllerColliderHit hit)
     {
-        if (other.tag == "GameOver")
+        if (hit.collider.tag == "GameOver")
         {
             GameOverZoneEntered?.Invoke();
         }

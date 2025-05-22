@@ -5,11 +5,12 @@ TagManager:
   serializedVersion: 3
   tags:
   - GameOver
+  - Boo
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - RayCast
   - Water
   - UI
   - 
