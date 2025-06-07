@@ -65,17 +65,20 @@ public class PlayerControl : MonoBehaviour, ProjectActions.IOverworldActions
 
     void FixedUpdate()
     {
-        Vector3 desiredMoveDirection = ProjectedMoveDirection();
-
-        //UpdateCharacterVelocity(desiredMoveDirection);
+        Vector3 desiredMoveDirection = ProjectedMoveDirection(); //Calls PMD and Sets DMD equal to the result of PMD
 
         cc.Move(UpdateCharacterVelocity(desiredMoveDirection));
 
-        if (direction.magnitude > 0)
-        {
-            float timeStep = rotationSpeed * Time.fixedDeltaTime;
-            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(desiredMoveDirection), timeStep);
-        }
+        Vector3 camEuler = mainCam.transform.eulerAngles;
+        transform.rotation = Quaternion.Euler(0f, camEuler.y, 0f);
+
+        //UpdateCharacterVelocity(ProjectedMoveDirection()); //Higher order function: takes the returned value from the lower order function and applies a transformation to it
+        //cc.Move(Velocity);
+        //if (direction.magnitude > 0)
+        //{
+        //    float timeStep = rotationSpeed * Time.fixedDeltaTime;
+        //    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(desiredMoveDirection), timeStep);
+        //}
     }
 
     private Vector3 UpdateCharacterVelocity(Vector3 desiredDirection)
@@ -96,12 +99,15 @@ public class PlayerControl : MonoBehaviour, ProjectActions.IOverworldActions
 
     private Vector3 ProjectedMoveDirection()
     {
+        //Gets camera transforms so we can apply cam relative movement
         Vector3 cameraRight = mainCam.transform.right;
         Vector3 cameraForward = mainCam.transform.forward;
 
+        //Removes Y component so there is no Y Rot being applied.
         cameraRight.y = 0;
         cameraForward.y = 0;
 
+        //Normalized to return consistant unit vectors
         cameraRight.Normalize();
         cameraForward.Normalize();
 

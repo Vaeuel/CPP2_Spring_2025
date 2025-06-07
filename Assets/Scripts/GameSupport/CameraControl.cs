@@ -6,8 +6,8 @@ public class CameraControl : MonoBehaviour
     public Vector3 offset = new Vector3(0, 2, -5);
     public float sensitivity = 5f;
     public float followSpeed = 10f;
-    public float minY = -20f;
-    public float maxY = 20f;
+    public float minY = -10f;
+    public float maxY = 10f;
 
     private float yaw;    // Horizontal rotation
     private float pitch;  // Vertical rotation
@@ -23,6 +23,8 @@ public class CameraControl : MonoBehaviour
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        Debug.Log($"Initial Pitch is " +pitch);
     }
 
     void LateUpdate()
@@ -39,11 +41,14 @@ public class CameraControl : MonoBehaviour
 
         // Apply rotation
         Quaternion rotation = Quaternion.Euler(pitch, yaw, 0);
+        transform.rotation = rotation;
 
         // Smooth follow
         Vector3 desiredPosition = player.position + rotation * offset;
         transform.position = Vector3.Lerp(transform.position, desiredPosition, followSpeed * Time.deltaTime);
 
-        transform.LookAt(player.position + Vector3.up * 1.5f); // Adjust target height if needed
+        //transform.LookAt(player.position + Vector3.up * 1.5f); // Adjust target height if needed
+
+        Debug.Log($"Updated Pitch is " + pitch);
     }
 }

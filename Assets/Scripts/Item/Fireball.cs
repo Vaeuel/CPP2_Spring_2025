@@ -3,14 +3,25 @@ using UnityEngine.SceneManagement;
 
 public class Fireball : MonoBehaviour
 {
-    private void OnTriggerEnter(Collider other)
-    {
-        if (other.CompareTag("Player"))
-        {
-            Destroy(other.gameObject);
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-        }
+    [SerializeField] private float lifetime = 2f; // lifetime in seconds
+    private float timer;
 
-        Destroy(gameObject);
+    private void Update()
+    {
+        timer += Time.deltaTime;
+        if (timer >= lifetime)
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.collider.CompareTag("Player"))
+        {
+            Destroy(collision.collider.gameObject);
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            Destroy(gameObject);
+        }
     }
 }
