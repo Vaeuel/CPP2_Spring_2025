@@ -3,7 +3,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-[RequireComponent(typeof(CharacterController))]
+[RequireComponent(typeof(CharacterController), typeof(AnimationManager))]
 
 public class PlayerControl : MonoBehaviour, ProjectActions.IOverworldActions
 {
@@ -12,14 +12,21 @@ public class PlayerControl : MonoBehaviour, ProjectActions.IOverworldActions
     ProjectActions input;
     CharacterController cc;
     Camera mainCam;
+    AnimationManager animMan;
 
     #region Inspector Variables
     [Header("Movement Variables")]
-    [SerializeField] private float initSpeed = .2f;
-    [SerializeField] private float maxSpeed = 2.0f;
-    [SerializeField] private float moveAccel = .2f;
-    [SerializeField] private float rotationSpeed = 10f;
+    [SerializeField] private float initSpeed = .1f;
+    [SerializeField] private float maxSpeed = 1.0f;
+    [SerializeField] private float moveAccel = .5f;
+    [SerializeField] private float rotationSpeed = 5f;
     private float curSpeed = 5.0f;
+    private bool canMove = true;
+
+    [Header("Weapon Variables")]
+    [SerializeField] private Transform rightHandAttachPoint;
+    [SerializeField] private Transform leftHandAttachPoint;
+    Weapon weapon = null;
 
     [Header("Jump Variables")]
     [SerializeField] private float jumpHeight = .1f;
@@ -37,17 +44,39 @@ public class PlayerControl : MonoBehaviour, ProjectActions.IOverworldActions
     #region Character Movement
     Vector2 direction;
     Vector3 velocity;
+    public Vector2 lookDelta;
+    private float yaw;
     private bool isJumpPressed = false;
+
     #endregion
 
     private void Start()
     {
         cc = GetComponent<CharacterController>();
         mainCam = Camera.main;
+        animMan = GetComponent<AnimationManager>();
+        animMan.OnToggleMovement += SetMovementEnabled;
 
         timeToJumpApex = jumpTime / 2;
         gravity = (-2 * jumpHeight) / Mathf.Pow(timeToJumpApex, 2);
         initJumpVelocity = -(gravity * timeToJumpApex);
+        yaw = transform.eulerAngles.y;
+    }
+
+    private void Update()
+    {
+        if (canMove)
+        {
+            Vector2 groundVel = new Vector2(velocity.x, velocity.z); //Takes the gravityless velocity.
+            animMan.LocoVel(groundVel.magnitude);
+        }
+        //Vector2 groundVel = new Vector2(velocity.x, velocity.z); //Takes the gravityless velocity.
+        //animMan.LocoVel(groundVel.magnitude);
+    }
+
+    public void SetMovementEnabled(bool enabled)
+    {
+        canMove = enabled;
     }
 
     void OnEnable()
@@ -66,11 +95,17 @@ public class PlayerControl : MonoBehaviour, ProjectActions.IOverworldActions
     void FixedUpdate()
     {
         Vector3 desiredMoveDirection = ProjectedMoveDirection(); //Calls PMD and Sets DMD equal to the result of PMD
-
-        cc.Move(UpdateCharacterVelocity(desiredMoveDirection));
-
         Vector3 camEuler = mainCam.transform.eulerAngles;
-        transform.rotation = Quaternion.Euler(0f, camEuler.y, 0f);
+
+        if (canMove)
+        {
+            cc.Move(UpdateCharacterVelocity(desiredMoveDirection));
+            yaw += lookDelta.x * rotationSpeed * Time.fixedDeltaTime;
+            transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+            //transform.rotation = Quaternion.Euler(0f, camEuler.y, 0f);
+        }
+        //cc.Move(UpdateCharacterVelocity(desiredMoveDirection));
+        //transform.rotation = Quaternion.Euler(0f, camEuler.y, 0f);
 
         //UpdateCharacterVelocity(ProjectedMoveDirection()); //Higher order function: takes the returned value from the lower order function and applies a transformation to it
         //cc.Move(Velocity);
@@ -120,18 +155,74 @@ public class PlayerControl : MonoBehaviour, ProjectActions.IOverworldActions
         else return -cc.minMoveDistance; //Constantly applies -Y velocity to ensure ground check is working
     }
 
+    //void OnTriggerEnter(Collider other)
+    //{
+    //    if (other.CompareTag("PowerUp"))
+    //    {
+    //        PowerUps powerUp = other.GetComponent<PowerUps>();
+    //        if (powerUp != null)
+    //        {
+    //            powerUp.ApplyEffect(gameObject);
+    //            Destroy(other.gameObject);
+    //        }
+    //    }
+    //}
+
     public void OnControllerColliderHit(ControllerColliderHit hit)
     {
+        if (hit.collider.CompareTag("PowerUp"))
+        {
+            PowerUps powerUp = hit.collider.GetComponent<PowerUps>();
+            if (powerUp != null)
+            {
+                powerUp.ApplyEffect(gameObject);
+                Destroy(hit.gameObject);
+            }
+        }
+        if (hit.collider.CompareTag("Weapon") && weapon == null)
+        {
+            weapon = hit.gameObject.GetComponent<Weapon>();
+            weapon.Equip(GetComponent<Collider>(), rightHandAttachPoint);
+        }
         if (hit.collider.tag == "GameOver")
         {
             GameOverZoneEntered?.Invoke();
         }
     }
     #region Input Functions
+
+    public void OnAttack(InputAction.CallbackContext context)
+    {
+        if (!context.performed) return;
+
+        if (context.control.name == "leftButton")
+        {
+            if (weapon)
+                animMan.Attacking("Primary"); //Primary and secondary allows for weapon swaps
+        }
+        else if (context.control.name == "rightButton")
+        {
+            animMan.Attacking("Secondary"); //Primary and secondary allows for weapon swaps
+        }
+    }
+
+    public void OnDrop(InputAction.CallbackContext context)
+    {
+        if (weapon)
+        {
+            weapon.Drop(GetComponent<Collider>(), transform.forward);
+            weapon = null;
+        }
+    }
     public void OnMovement(InputAction.CallbackContext context)
     {
         if (context.performed) direction = context.ReadValue<Vector2>();
         if (context.canceled) direction = Vector2.zero;
+    }
+
+    public void OnLook(InputAction.CallbackContext context)
+    {
+        lookDelta = context.ReadValue<Vector2>();
     }
 
     public void OnJump(InputAction.CallbackContext context) => isJumpPressed = context.ReadValueAsButton(); //

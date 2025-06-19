@@ -112,6 +112,7 @@ public class RayCaster : MonoBehaviour
         if (Physics.Raycast(ray, out hitInfo, distance, collisionMask))
         {
             GameObject detected = hitInfo.transform.root.gameObject; //Gets the top-most parent of the object hit
+            //Debug.Log($"RayCaster: Ray caster has detected {detected.name}");
             GameObject raycasterRoot = transform.root.gameObject; //Gets the top-most parent of the object doing the detection
 
 

@@ -17,10 +17,15 @@ public class Fireball : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
+        string targetTag = collision.collider.tag;
+
         if (collision.collider.CompareTag("Player"))
         {
-            Destroy(collision.collider.gameObject);
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            AnimationManager animMan = collision.collider.GetComponentInChildren<AnimationManager>();
+            if (animMan != null)
+            {
+                animMan.Death(targetTag);
+            }
             Destroy(gameObject);
         }
     }

@@ -6,6 +6,8 @@ TagManager:
   tags:
   - GameOver
   - Boo
+  - Weapon
+  - PowerUp
   layers:
   - Default
   - TransparentFX
@@ -13,7 +15,7 @@ TagManager:
   - RayCast
   - Water
   - UI
-  - 
+  - groundMask
   - 
   - 
   - 
