@@ -6,7 +6,7 @@ using UnityEngine.AI;
 
 public class EnemyPathFinder : MonoBehaviour
 {
-    public enum EnemyState { Chase, Patrol, Freeze }
+    public enum EnemyState { Chase, Patrol, Freeze, Dead }
     public EnemyState curState;
     private bool isWaiting = false;
 
@@ -52,6 +52,10 @@ public class EnemyPathFinder : MonoBehaviour
             case EnemyState.Freeze:
                 target = null;
                 agent.ResetPath();
+                break;
+
+            case EnemyState.Dead:
+                target = null;
                 break;
         }
 

@@ -31,7 +31,6 @@ public class AnimationManager : MonoBehaviour
         if (targetHit == "Boo")
         {
             Debug.Log($"AnimationManager: Death was triggered by {targetHit}");
-            controlScript.Death();
             StartCoroutine(WaitThenDestroy());
         }
 
@@ -41,7 +40,9 @@ public class AnimationManager : MonoBehaviour
     IEnumerator WaitThenDestroy()
     {
         yield return null; // Wait a frame so the animation has time to transition
-        yield return new WaitForSeconds(anim.GetCurrentAnimatorStateInfo(0).length + 1f); // Wait for the animation to finish
+        controlScript.Death(); 
+        yield return new WaitForSeconds(3f);
+        //yield return new WaitForSeconds(anim.GetCurrentAnimatorStateInfo(0).length + 1f); // Wait for the animation to finish
         Debug.Log($"AnimationManager: WaitThenDestroy is destroying {gameObject.name}");
         Destroy(gameObject);
     }

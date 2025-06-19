@@ -23,6 +23,7 @@ public class BooController : MonoBehaviour
 
     private AnimationManager animMan;
     private SkinnedMeshRenderer booRenderer;
+    private CapsuleCollider cc;
     private EnemyPathFinder epf;
     private GameObject spawnerPreFab;
 
@@ -30,6 +31,7 @@ public class BooController : MonoBehaviour
     private float velocity;
 
     private bool playerIsLooking = false;
+    private bool isDead = false;
     private Vector3 lastPOS;
 
     private void Start()
@@ -37,6 +39,7 @@ public class BooController : MonoBehaviour
         lastPOS = transform.position;
         animMan = GetComponent<AnimationManager>();
         epf = GetComponent<EnemyPathFinder>();
+        cc = GetComponent<CapsuleCollider>();
         //booRenderer = GetComponentInChildren<SkinnedMeshRenderer>();
 
         if (epf) epf.SetState(EnemyPathFinder.EnemyState.Patrol);
@@ -58,52 +61,59 @@ public class BooController : MonoBehaviour
         //{
         //    verticalVelocity = 0f;
         //}
-
-        if (player != null)
+        if (!isDead)
         {
-            if (epf.curState == EnemyPathFinder.EnemyState.Chase)
+            if (player != null)
             {
-                HandleShooting();
+                if (epf.curState == EnemyPathFinder.EnemyState.Chase)
+                {
+                    HandleShooting();
+                }
+                if (!playerIsLooking)
+                {
+                    SetVisible(true);
+                    //ChasePlayer();
+                    //HandleShooting();
+                }
+                else
+                {
+                    SetVisible(false);
+                    //if (epf) epf.GetAgent().ResetPath();
+                }
             }
-            if (!playerIsLooking)
-            {
-                SetVisible(true);
-                //ChasePlayer();
-                //HandleShooting();
-            }
-            else
-            {
-                SetVisible(false);
-                //if (epf) epf.GetAgent().ResetPath();
-            }
+
+            //transform.position += new Vector3(0f, verticalVelocity * Time.deltaTime, 0f); // Apply vertical movement
+            Vector3 vel = transform.position - lastPOS;
+            velocity = new Vector2(vel.x, vel.z).magnitude / Time.deltaTime * .1f;
+            animMan.LocoVel(velocity);
+
+            //Debug.DrawRay(transform.position + Vector3.up * 0.1f, Vector3.down * (groundCheckDistance + 0.1f), Color.red);
+
+            lastPOS = transform.position;
+
+            //Debug.Log($"Boo controller: lastPOS is {lastPOS}");
+            //Debug.Log($"Boo controller: Velocity is {velocity}");
+
         }
-
-        //transform.position += new Vector3(0f, verticalVelocity * Time.deltaTime, 0f); // Apply vertical movement
-        Vector3 vel = transform.position - lastPOS;
-        velocity = new Vector2(vel.x, vel.z).magnitude / Time.deltaTime * .1f;
-        animMan.LocoVel(velocity);
-
-        //Debug.DrawRay(transform.position + Vector3.up * 0.1f, Vector3.down * (groundCheckDistance + 0.1f), Color.red);
-
-        lastPOS = transform.position;
-
-        //Debug.Log($"Boo controller: lastPOS is {lastPOS}");
-        //Debug.Log($"Boo controller: Velocity is {velocity}");
     }
 
     public void OnDetected(GameObject who)
     {
         if (who.CompareTag("Player"))
         {
-            player = who.transform;
-            playerIsLooking = true;
-            //Debug.Log("BooController: OnDetected has confirmed it's been detected by the Player");
-
-            if (epf)
+            if (!isDead)
             {
-                epf.SetPlayer(player);
-                epf.SetState(EnemyPathFinder.EnemyState.Freeze);
+                player = who.transform;
+                playerIsLooking = true;
+                //Debug.Log("BooController: OnDetected has confirmed it's been detected by the Player");
+
+                if (epf)
+                {
+                    epf.SetPlayer(player);
+                    epf.SetState(EnemyPathFinder.EnemyState.Freeze);
+                }
             }
+
         }
     }
 
@@ -111,10 +121,12 @@ public class BooController : MonoBehaviour
     {
         velocity = 0f;
         playerIsLooking = false;
-
-        if (epf)
+        if (!isDead)
         {
-            epf.SetState(EnemyPathFinder.EnemyState.Chase);
+            if (epf)
+            {
+                epf.SetState(EnemyPathFinder.EnemyState.Chase);
+            }
         }
     }
 
@@ -173,7 +185,11 @@ public class BooController : MonoBehaviour
     public void Death()
     {
         Debug.Log("Entered Death");
-        epf.SetState(EnemyPathFinder.EnemyState.Freeze);
+        player = null;
+        playerIsLooking = false;
+        isDead = true;
+        cc.enabled = false;
+        epf.SetState(EnemyPathFinder.EnemyState.Dead);
         Debug.Log("Changed Enemy State");
         LootSpawn();
         Debug.Log("Exited LootSpawn");
