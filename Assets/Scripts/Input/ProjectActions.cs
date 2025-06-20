@@ -62,6 +62,15 @@ public partial class @ProjectActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Interact"",
+                    ""type"": ""Button"",
+                    ""id"": ""50a5dd8c-b096-4fdf-b6a1-d7cf56626b8f"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -229,6 +238,17 @@ public partial class @ProjectActions: IInputActionCollection2, IDisposable
                     ""action"": ""Attack"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""4830b30e-06fd-4521-a04f-d68e5400268e"",
+                    ""path"": ""<Keyboard>/e"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Interact"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -241,6 +261,7 @@ public partial class @ProjectActions: IInputActionCollection2, IDisposable
         m_Overworld_Jump = m_Overworld.FindAction("Jump", throwIfNotFound: true);
         m_Overworld_Drop = m_Overworld.FindAction("Drop", throwIfNotFound: true);
         m_Overworld_Attack = m_Overworld.FindAction("Attack", throwIfNotFound: true);
+        m_Overworld_Interact = m_Overworld.FindAction("Interact", throwIfNotFound: true);
     }
 
     ~@ProjectActions()
@@ -311,6 +332,7 @@ public partial class @ProjectActions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Overworld_Jump;
     private readonly InputAction m_Overworld_Drop;
     private readonly InputAction m_Overworld_Attack;
+    private readonly InputAction m_Overworld_Interact;
     public struct OverworldActions
     {
         private @ProjectActions m_Wrapper;
@@ -319,6 +341,7 @@ public partial class @ProjectActions: IInputActionCollection2, IDisposable
         public InputAction @Jump => m_Wrapper.m_Overworld_Jump;
         public InputAction @Drop => m_Wrapper.m_Overworld_Drop;
         public InputAction @Attack => m_Wrapper.m_Overworld_Attack;
+        public InputAction @Interact => m_Wrapper.m_Overworld_Interact;
         public InputActionMap Get() { return m_Wrapper.m_Overworld; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -340,6 +363,9 @@ public partial class @ProjectActions: IInputActionCollection2, IDisposable
             @Attack.started += instance.OnAttack;
             @Attack.performed += instance.OnAttack;
             @Attack.canceled += instance.OnAttack;
+            @Interact.started += instance.OnInteract;
+            @Interact.performed += instance.OnInteract;
+            @Interact.canceled += instance.OnInteract;
         }
 
         private void UnregisterCallbacks(IOverworldActions instance)
@@ -356,6 +382,9 @@ public partial class @ProjectActions: IInputActionCollection2, IDisposable
             @Attack.started -= instance.OnAttack;
             @Attack.performed -= instance.OnAttack;
             @Attack.canceled -= instance.OnAttack;
+            @Interact.started -= instance.OnInteract;
+            @Interact.performed -= instance.OnInteract;
+            @Interact.canceled -= instance.OnInteract;
         }
 
         public void RemoveCallbacks(IOverworldActions instance)
@@ -379,5 +408,6 @@ public partial class @ProjectActions: IInputActionCollection2, IDisposable
         void OnJump(InputAction.CallbackContext context);
         void OnDrop(InputAction.CallbackContext context);
         void OnAttack(InputAction.CallbackContext context);
+        void OnInteract(InputAction.CallbackContext context);
     }
 }

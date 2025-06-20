@@ -22,6 +22,7 @@ public class PlayerControl : MonoBehaviour, ProjectActions.IOverworldActions
     [SerializeField] private float rotationSpeed = 5f;
     private float curSpeed = 5.0f;
     private bool canMove = true;
+    private bool isSaving = false;
 
     [Header("Weapon Variables")]
     [SerializeField] private Transform rightHandAttachPoint;
@@ -226,6 +227,14 @@ public class PlayerControl : MonoBehaviour, ProjectActions.IOverworldActions
     }
 
     public void OnJump(InputAction.CallbackContext context) => isJumpPressed = context.ReadValueAsButton(); //
+
+    public void OnInteract(InputAction.CallbackContext context)
+    {
+        if(isSaving)
+        {
+
+        }
+    }
 
     #endregion
 }

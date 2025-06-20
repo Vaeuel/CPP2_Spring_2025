@@ -8,6 +8,8 @@ public class Weapon : MonoBehaviour
 {
     Rigidbody rb;
     BoxCollider bc;
+    [Tooltip("Ensure to drag Particle effect game object container here")]
+    [SerializeField] GameObject e3;
 
     private void Start()
     {
@@ -20,6 +22,7 @@ public class Weapon : MonoBehaviour
         //Setting ridgid body to kinematic to ignore physics
         rb.isKinematic = true;
         bc.isTrigger = true;
+        e3.SetActive(false);
         transform.SetParent(weaponAttackPoint);
         transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
         Physics.IgnoreCollision(playerCollider, bc);
@@ -30,6 +33,7 @@ public class Weapon : MonoBehaviour
         transform.parent = null;
         rb.isKinematic = false;
         bc.isTrigger = false;
+        e3.SetActive(true);
         rb.AddForce(playerForward * 10, ForceMode.Impulse);
         StartCoroutine(DropCoolDown(playerCollider));
     }
