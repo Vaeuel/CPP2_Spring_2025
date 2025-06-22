@@ -1,7 +1,9 @@
 using System;
+using Unity.Cinemachine;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using static LoadSaveManager.GameStateData;
 
 [RequireComponent(typeof(CharacterController), typeof(AnimationManager))]
 
@@ -13,6 +15,7 @@ public class PlayerControl : MonoBehaviour, ProjectActions.IOverworldActions
     CharacterController cc;
     Camera mainCam;
     AnimationManager animMan;
+    GameManager gm;
 
     #region Inspector Variables
     [Header("Movement Variables")]
@@ -22,7 +25,8 @@ public class PlayerControl : MonoBehaviour, ProjectActions.IOverworldActions
     [SerializeField] private float rotationSpeed = 5f;
     private float curSpeed = 5.0f;
     private bool canMove = true;
-    private bool isSaving = false;
+    private bool isSavingEnabled = false;
+    public bool isWeapon = false;
 
     [Header("Weapon Variables")]
     [SerializeField] private Transform rightHandAttachPoint;
@@ -51,12 +55,107 @@ public class PlayerControl : MonoBehaviour, ProjectActions.IOverworldActions
 
     #endregion
 
+    //#region Game Save logic
+    ////Function called when saving game
+    //public void SaveGamePrepare()
+    //{
+    //    // Get Player Data Object
+    //    //LoadSaveManager.GameStateData.DataPlayer data = GameManager.saveManager.gameState.player;
+
+    //    // Fill in player data for save game
+    //    data.collectedWeapon = isWeapon;
+
+    //    data.transformData.posX = transform.position.x;
+    //    data.transformData.posY = transform.position.y;
+    //    data.transformData.posZ = transform.position.z;
+    //    data.transformData.rotX = transform.rotation.eulerAngles.x;
+    //    data.transformData.rotY = transform.rotation.eulerAngles.y;
+    //    data.transformData.rotZ = transform.rotation.eulerAngles.z;
+    //}
+
+    //// Function called when loading is complete
+    //public void LoadGameComplete()
+    //{
+    //    // Get Player Data Object
+    //    //LoadSaveManager.GameStateData.DataPlayer data = GameManager.saveManager.gameState.player;
+
+    //    //Load data back to Player
+    //    isWeapon = data.collectedWeapon;
+
+    //    //Give player weapon, activate and destroy weapon power-up
+    //    if (isWeapon)
+    //    {
+    //        //Find weapon powerup in level
+    //        GameObject weapon = GameObject.Find("Sword");
+
+    //        //Send OnTriggerEnter message
+    //        weapon.SendMessage("OnTriggerEnter", GetComponent<CharacterController>(), SendMessageOptions.DontRequireReceiver);
+    //    }
+
+
+
+    //    //Set position
+    //    transform.position = new Vector3(data.transformData.posX, data.transformData.posY, data.transformData.posZ);
+
+    //    //Set rotation
+    //    transform.rotation = Quaternion.Euler(data.transformData.rotX, data.transformData.rotY, data.transformData.rotZ);
+
+    //    //Set scale
+    //    transform.localScale = new Vector3(data.transformData.scaleX, data.transformData.scaleY, data.transformData.scaleZ);
+    //}
+    //#endregion
+
+    void Awake()
+    {
+        //GameStateData savedData = LoadSaveManager.GameStateData;
+        //SpawnPlayer(savedData);
+    }
+
+    public void SetData(LoadSaveManager.GameStateData.DataPlayer data)
+    {
+        isWeapon = data.collectedWeapon;
+        //health = data.health;
+        //cash = data.cash;
+
+        transform.position = new Vector3(data.transformData.posX, data.transformData.posY, data.transformData.posZ);
+        transform.eulerAngles = new Vector3(data.transformData.rotX, data.transformData.rotY, data.transformData.rotZ);
+        transform.localScale = new Vector3(data.transformData.scaleX, data.transformData.scaleY, data.transformData.scaleZ);
+
+        if (isWeapon && weapon == null)
+        {
+            GameObject weaponObj = GameObject.FindWithTag("Weapon");
+            if (weaponObj != null)
+            {
+                weapon = weaponObj.GetComponent<Weapon>();
+                if (weapon != null)
+                {
+                    weapon.Equip(GetComponent<Collider>(), rightHandAttachPoint);
+                }
+            }
+            else
+            {
+                Debug.LogWarning("SetData: Weapon was collected but no weapon object found in scene.");
+            }
+
+            //GameObject camObj = GameObject.Find("FreeLook Camera");
+            //if (camObj != null)
+            //{
+            //    Unity.Cinemachine.CinemachineFreeLook cam = camObj.GetComponent<Unity.Cinemachine.CinemachineFreeLook>();
+            //    if (cam != null)
+            //    {
+
+            //    }
+            //}
+        }
+    }
+
     private void Start()
     {
         cc = GetComponent<CharacterController>();
         mainCam = Camera.main;
         animMan = GetComponent<AnimationManager>();
         animMan.OnToggleMovement += SetMovementEnabled;
+        gm = FindAnyObjectByType<GameManager>();
 
         timeToJumpApex = jumpTime / 2;
         gravity = (-2 * jumpHeight) / Mathf.Pow(timeToJumpApex, 2);
@@ -156,18 +255,21 @@ public class PlayerControl : MonoBehaviour, ProjectActions.IOverworldActions
         else return -cc.minMoveDistance; //Constantly applies -Y velocity to ensure ground check is working
     }
 
-    //void OnTriggerEnter(Collider other)
-    //{
-    //    if (other.CompareTag("PowerUp"))
-    //    {
-    //        PowerUps powerUp = other.GetComponent<PowerUps>();
-    //        if (powerUp != null)
-    //        {
-    //            powerUp.ApplyEffect(gameObject);
-    //            Destroy(other.gameObject);
-    //        }
-    //    }
-    //}
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("SavePoint"))
+        {
+            isSavingEnabled = true;
+        }
+    }
+
+    void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("SavePoint"))
+        {
+            isSavingEnabled = false;
+        }
+    }
 
     public void OnControllerColliderHit(ControllerColliderHit hit)
     {
@@ -184,6 +286,7 @@ public class PlayerControl : MonoBehaviour, ProjectActions.IOverworldActions
         {
             weapon = hit.gameObject.GetComponent<Weapon>();
             weapon.Equip(GetComponent<Collider>(), rightHandAttachPoint);
+            isWeapon = true;
         }
         if (hit.collider.tag == "GameOver")
         {
@@ -213,6 +316,7 @@ public class PlayerControl : MonoBehaviour, ProjectActions.IOverworldActions
         {
             weapon.Drop(GetComponent<Collider>(), transform.forward);
             weapon = null;
+            isWeapon = false;   
         }
     }
     public void OnMovement(InputAction.CallbackContext context)
@@ -230,9 +334,10 @@ public class PlayerControl : MonoBehaviour, ProjectActions.IOverworldActions
 
     public void OnInteract(InputAction.CallbackContext context)
     {
-        if(isSaving)
+        if(isSavingEnabled)
         {
-
+            gm.SaveGame();
+            Debug.Log("Player Progress saved.");
         }
     }
 

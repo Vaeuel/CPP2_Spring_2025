@@ -34,7 +34,11 @@ public class AnimationManager : MonoBehaviour
             StartCoroutine(WaitThenDestroy());
         }
 
-        if (targetHit == "Player") StartCoroutine(WaitAndReload());
+        if (targetHit == "Player")
+        {
+            Debug.Log($"AnimationManager: Death was triggered by {targetHit}");
+            StartCoroutine(WaitAndReload());
+        }
     }
     #region Coroutines
     IEnumerator WaitThenDestroy()
@@ -50,8 +54,11 @@ public class AnimationManager : MonoBehaviour
     {
         OnToggleMovement?.Invoke(false); // Tell listeners to stop movement
         yield return null; // Wait a frame so the animation has time to transition
-        yield return new WaitForSeconds(anim.GetCurrentAnimatorStateInfo(0).length + 1f); // Wait for the animation to finish
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex); //Restart level
+        yield return new WaitForSeconds(3f); // Wait for the animation to finish
+        Debug.Log($"AnimationManager: WaitAndReload() is done waiting");
+        GameManager.Instance.LoadGame();
+        Destroy(gameObject);
+        //SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex); //Restart level
     }
     private IEnumerator DelayMovement()
     {
