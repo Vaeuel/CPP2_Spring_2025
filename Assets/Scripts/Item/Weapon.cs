@@ -42,7 +42,7 @@ public class Weapon : MonoBehaviour
     {
         string targetTag = other.gameObject.tag;
         //Debug.Log($"Collision detected on weapon: {targetTag}");
-        if (other.gameObject.CompareTag("Boo"))
+        if (other.gameObject.CompareTag("Enemy"))
         {
             Physics.IgnoreCollision(other, bc, true);
 

@@ -136,16 +136,6 @@ public class PlayerControl : MonoBehaviour, ProjectActions.IOverworldActions
             {
                 Debug.LogWarning("SetData: Weapon was collected but no weapon object found in scene.");
             }
-
-            //GameObject camObj = GameObject.Find("FreeLook Camera");
-            //if (camObj != null)
-            //{
-            //    Unity.Cinemachine.CinemachineFreeLook cam = camObj.GetComponent<Unity.Cinemachine.CinemachineFreeLook>();
-            //    if (cam != null)
-            //    {
-
-            //    }
-            //}
         }
     }
 

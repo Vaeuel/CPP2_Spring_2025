@@ -9,6 +9,7 @@ TagManager:
   - Weapon
   - PowerUp
   - SavePoint
+  - Enemy
   layers:
   - Default
   - TransparentFX

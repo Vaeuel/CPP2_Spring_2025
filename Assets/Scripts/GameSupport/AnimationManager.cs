@@ -6,13 +6,13 @@ using System;
 public class AnimationManager : MonoBehaviour
 {
     Animator anim;
-    BooController controlScript;
+    EnemyController controlScript;
     public event Action<bool> OnToggleMovement;
 
     void Start()
     {
         anim = GetComponentInChildren<Animator>();
-        controlScript = GetComponent<BooController>();
+        controlScript = GetComponent<EnemyController>();
         //Debug.Log ($"AnimationManager: Control Script is set to {controlScript.GetType().Name}");
         if (anim == null) Debug.Log("Animation Manager: Animator assignment has failed");
     }
@@ -28,7 +28,7 @@ public class AnimationManager : MonoBehaviour
         anim.SetTrigger("IsDead");
         //Destroy(gameObject);
         //SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-        if (targetHit == "Boo")
+        if (targetHit == "Enemy")
         {
             Debug.Log($"AnimationManager: Death was triggered by {targetHit}");
             StartCoroutine(WaitThenDestroy());
@@ -84,6 +84,7 @@ public class AnimationManager : MonoBehaviour
 
     internal void EnemyAttack()
     {
+        Debug.Log("AnimationManager: Some EnemyAttack has been called upon");
         anim.SetTrigger("IsAttacking");
     }
 }
